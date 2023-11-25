@@ -11,6 +11,11 @@ db_user = "desperado"
 db_password = "6156dbdesperado"
 db_name = "postgres"
 
+@app.route('/', methods=['GET'])
+# for testing
+def main():
+    return "Hello World",200
+
 # API to create a new user
 @app.route('/userinfo/', methods=['POST'])
 def create_user():
