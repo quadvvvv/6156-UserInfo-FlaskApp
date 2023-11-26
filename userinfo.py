@@ -71,6 +71,8 @@ def create_user():
 # API to get information about a specific user based on the email
 @app.route('/userinfo/<email>', methods=['GET'])
 def get_user(email):
+    cursor = None 
+
     try:
         # Connect to the database
         conn = psycopg2.connect(
