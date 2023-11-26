@@ -5,8 +5,8 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # Database configuration (replace these values with your RDS details)
-db_host =  "desperado-db.ctldmj6kaxoc.us-east-2.rds.amazonaws.com",
-db_port = 5432,
+db_host =  "desperado-db.ctldmj6kaxoc.us-east-2.rds.amazonaws.com"
+db_port = 5432
 db_user = "desperado"
 db_password = "6156dbdesperado"
 db_name = "postgres"
