@@ -315,10 +315,5 @@ def delete_user(email):
         if conn:
             conn.close()
 
-#TODO: post and update for user profile picture. I mean... post is just enought for now I guess.
-@app.route('/userinfo/uploadpicture', methods=['POST'])
-def upload_picture():
-
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
