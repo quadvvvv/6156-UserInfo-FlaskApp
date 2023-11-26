@@ -8,8 +8,8 @@ app = Flask(__name__)
 conn = psycopg2.connect(
     host =  "desperado-db.ctldmj6kaxoc.us-east-2.rds.amazonaws.com",
     port = 5432,
-    user = "desperado"
-    password = "6156dbdesperado"
+    user = "desperado",
+    password = "6156dbdesperado",
     database = "postgres"
 )
 
