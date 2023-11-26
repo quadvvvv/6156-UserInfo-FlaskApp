@@ -11,12 +11,9 @@ db_user = "desperado"
 db_password = "6156dbdesperado"
 db_name = "postgres"
 
-# init
-conn = None
-cursor = None 
 
+# for teting
 @app.route('/', methods=['GET'])
-# for testing
 def main():
     return "Hello World",200
 
@@ -76,6 +73,10 @@ def create_user():
 # API to get information about a specific user based on the email
 @app.route('/userinfo/<email>', methods=['GET'])
 def get_user(email):
+    # init
+    conn = None
+    cursor = None 
+
     try:
         # Connect to the database
         conn = psycopg2.connect(
