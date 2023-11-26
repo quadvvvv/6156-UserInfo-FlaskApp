@@ -1,6 +1,14 @@
 import uuid
 import psycopg2
+import boto3 # for picture upload
+
+from botocore.exceptions import NoCredentialsError
 from flask import Flask, request, jsonify
+
+# AWS S3 configuration
+s3_bucket_name = "your-s3-bucket-name"
+s3_access_key = "your-s3-access-key"
+s3_secret_key = "your-s3-secret-key"
 
 app = Flask(__name__)
 
@@ -21,6 +29,19 @@ def main():
     return "Hello World",200
 
 
+# Helper function for create a new user to upload a file to s3
+def upload_to_s3(file, bucket_name, object_name):
+    s3 = boto3.client('s3', aws_access_key_id=s3_access_key, aws_secret_access_key=s3_secret_key)
+    try:
+        s3.upload_file(file, bucket_name, object_name)
+        return True
+    except FileNotFoundError:
+        print("The file was not found")
+        return False
+    except NoCredentialsError:
+        print("Credentials not available")
+        return False
+
 # API to create a new user
 @app.route('/userinfo/', methods=['POST'])
 def create_user():
@@ -30,6 +51,16 @@ def create_user():
     email = data.get('email')
     is_recruiter = data.get('is_recruiter')
     picture_url = data.get('picture_url')
+
+    #TODO: upload picture to s3 bucket and return a url
+    # # Check if the 'picture' file is included in the request
+    # if 'picture' not in request.files:
+    #     return jsonify({"error": "No picture file provided"}), 400
+
+    # picture_file = request.files['picture']
+
+    # if not name or not company or not email or is_recruiter is None or not picture_file:
+    #     return jsonify({"error": "Missing required fields"}), 400
 
     if not name or not company or not email or is_recruiter is None or not picture_url:
         return jsonify({"error": "Missing required fields"}), 400
@@ -49,6 +80,14 @@ def create_user():
 
         # Generate a new UUID
         user_uuid = str(uuid.uuid4())
+
+        #TODO boilerplate code
+        ## Upload the picture to S3
+        # picture_filename = f"{user_uuid}_{picture_file.filename}"
+        # if upload_to_s3(picture_file, s3_bucket_name, picture_filename):
+        #     picture_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{picture_filename}"
+        # else:
+        #     return jsonify({"error": "Failed to upload picture to S3"}), 500
 
         # Insert new user into the "userinfo" table
         cursor.execute(
@@ -74,6 +113,8 @@ def create_user():
         if conn:
             conn.close()
 # API to get information about a specific user based on the email
+
+# passed test
 @app.route('/userinfo/<email>', methods=['GET'])
 def get_user(email):
     try:
@@ -117,6 +158,7 @@ def get_user(email):
             conn.close()
 
 # API to get all recruiters
+# test passed
 @app.route('/userinfo/recruiters', methods=['GET'])
 def get_recruiters():
     try:
@@ -158,6 +200,7 @@ def get_recruiters():
             conn.close()
 
 # API to get all job seekers
+# test passed
 @app.route('/userinfo/jobseekers', methods=['GET'])
 def get_jobseekers():
     try:
@@ -271,6 +314,10 @@ def delete_user(email):
             cursor.close()
         if conn:
             conn.close()
+
+#TODO: post and update for user profile picture. I mean... post is just enought for now I guess.
+@app.route('/userinfo/uploadpicture', methods=['POST'])
+def upload_picture():
 
 
 if __name__ == '__main__':
