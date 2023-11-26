@@ -4,19 +4,22 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Database configuration
-conn = psycopg2.connect(
-    host =  "desperado-db.ctldmj6kaxoc.us-east-2.rds.amazonaws.com",
-    port = 5432,
-    user = "desperado",
-    password = "6156dbdesperado",
-    database = "postgres"
-)
+# Database configuration (replace these values with your RDS details)
+db_host =  "desperado-db.ctldmj6kaxoc.us-east-2.rds.amazonaws.com",
+db_port = 5432,
+db_user = "desperado"
+db_password = "6156dbdesperado"
+db_name = "postgres"
+
+# init
+conn = None
+cursor = None 
 
 @app.route('/', methods=['GET'])
 # for testing
 def main():
     return "Hello World",200
+
 
 # API to create a new user
 @app.route('/userinfo/', methods=['POST'])
@@ -31,49 +34,87 @@ def create_user():
     if not name or not company or not email or is_recruiter is None or not picture_url:
         return jsonify({"error": "Missing required fields"}), 400
 
-   
-    user_uuid = str(uuid.uuid4())
-    cursor=conn.cursor()
+    try:
+        # Connect to the database
+        conn = psycopg2.connect(
+            host=db_host,
+            port=db_port,
+            database=db_name,
+            user=db_user,
+            password=db_password
+        )
 
-    # Insert new user into the "userinfo" table
-    cursor.execute(
-        """
-        INSERT INTO userinfo (uuid, name, company, email, is_recruiter, picture_url)
-        VALUES (%s, %s, %s, %s, %s, %s);
-        """,
-        (user_uuid, name, company, email, is_recruiter, picture_url)
-    )
+        # Create a cursor to execute SQL queries
+        cursor = conn.cursor()
 
-    # Commit the transaction
-    conn.commit()
+        # Generate a new UUID
+        user_uuid = str(uuid.uuid4())
 
-    return jsonify({"message": "User created successfully"}), 201
+        # Insert new user into the "userinfo" table
+        cursor.execute(
+            """
+            INSERT INTO userinfo (uuid, name, company, email, is_recruiter, picture_url)
+            VALUES (%s, %s, %s, %s, %s, %s);
+            """,
+            (user_uuid, name, company, email, is_recruiter, picture_url)
+        )
 
-  
+        # Commit the transaction
+        conn.commit()
+
+        return jsonify({"message": "User created successfully"}), 201
+
+    except psycopg2.Error as e:
+        return jsonify({"error": f"Database error: {e}"}), 500
+
+    finally:
+        # Close the cursor and connection
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 # API to get information about a specific user based on the email
 @app.route('/userinfo/<email>', methods=['GET'])
 def get_user(email):
+    try:
+        # Connect to the database
+        conn = psycopg2.connect(
+            host=db_host,
+            port=db_port,
+            database=db_name,
+            user=db_user,
+            password=db_password
+        )
 
-    # Create a cursor to execute SQL queries
-    cursor = conn.cursor()
+        # Create a cursor to execute SQL queries
+        cursor = conn.cursor()
 
-    # Retrieve user information from the "userinfo" table
-    cursor.execute("SELECT * FROM userinfo WHERE email = %s;", (email,))
-    user = cursor.fetchone()
+        # Retrieve user information from the "userinfo" table
+        cursor.execute("SELECT * FROM userinfo WHERE email = %s;", (email,))
+        user = cursor.fetchone()
 
-    if user:
-        user_info = {
-            "uuid": user[0],
-            "name": user[1],
-            "company": user[2],
-            "email": user[3],
-            "is_recruiter": user[4],
-            "picture_url": user[5]
-        }
-        return jsonify(user_info)
-    else:
-        return jsonify({"error": "User not found"}), 404
+        if user:
+            user_info = {
+                "uuid": user[0],
+                "name": user[1],
+                "company": user[2],
+                "email": user[3],
+                "is_recruiter": user[4],
+                "picture_url": user[5]
+            }
+            return jsonify(user_info)
+        else:
+            return jsonify({"error": "User not found"}), 404
 
+    except psycopg2.Error as e:
+        return jsonify({"error": f"Database error: {e}"}), 500
+
+    finally:
+        # Close the cursor and connection
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 # API to get all recruiters
 @app.route('/userinfo/recruiters', methods=['GET'])
@@ -233,4 +274,4 @@ def delete_user(email):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, port=5000)
+    app.run(debug=True)
