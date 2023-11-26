@@ -23,8 +23,8 @@ db_name = "postgres"
 cursor = None
 conn = None 
 
-# for teting
-@app.route('/', methods=['GET'])
+# for testing
+@app.route('/userinfo', methods=['GET'])
 def main():
     return "Hello World",200
 
