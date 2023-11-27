@@ -17,7 +17,7 @@ db_host =  "desperado-db.ctldmj6kaxoc.us-east-2.rds.amazonaws.com"
 db_port = 5432
 db_user = "desperado"
 db_password = "6156dbdesperado"
-db_name = "postgres"
+db_name = "userinfo"
 
 # init
 cursor = None
