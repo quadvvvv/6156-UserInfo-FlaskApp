@@ -5,10 +5,10 @@ import boto3 # for picture upload
 from botocore.exceptions import NoCredentialsError
 from flask import Flask, request, jsonify
 
-# AWS S3 configuration
-s3_bucket_name = "your-s3-bucket-name"
-s3_access_key = "your-s3-access-key"
-s3_secret_key = "your-s3-secret-key"
+# # AWS S3 configuration
+# s3_bucket_name = "your-s3-bucket-name"
+# s3_access_key = "your-s3-access-key"
+# s3_secret_key = "your-s3-secret-key"
 
 app = Flask(__name__)
 
