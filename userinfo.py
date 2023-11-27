@@ -29,18 +29,20 @@ def main():
     return "Hello World",200
 
 
-# Helper function for create a new user to upload a file to s3
-def upload_to_s3(file, bucket_name, object_name):
-    s3 = boto3.client('s3', aws_access_key_id=s3_access_key, aws_secret_access_key=s3_secret_key)
-    try:
-        s3.upload_file(file, bucket_name, object_name)
-        return True
-    except FileNotFoundError:
-        print("The file was not found")
-        return False
-    except NoCredentialsError:
-        print("Credentials not available")
-        return False
+# # Helper function for create a new user to upload a file to s3
+# def upload_to_s3(file, bucket_name, object_name):
+#     s3 = boto3.client('s3', aws_access_key_id=s3_access_key, aws_secret_access_key=s3_secret_key)
+#     try:
+#         s3.upload_file(file, bucket_name, object_name)
+#         return True
+#     except FileNotFoundError:
+#         print("The file was not found")
+#         return False
+#     except NoCredentialsError:
+#         print("Credentials not available")
+#         return False
+
+
 
 # API to create a new user
 @app.route('/userinfo/', methods=['POST'])
@@ -230,6 +232,40 @@ def get_jobseekers():
         } for user in jobseekers]
 
         return jsonify(jobseeker_list)
+
+    except psycopg2.Error as e:
+        return jsonify({"error": f"Database error: {e}"}), 500
+
+    finally:
+        # Close the cursor and connection
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+@app.route('/userinfo/total_count', methods=['GET'])
+def get_total_count():  
+    try:
+        # Connect to the database
+        conn = psycopg2.connect(
+            host=db_host,
+            port=db_port,
+            database=db_name,
+            user=db_user,
+            password=db_password
+        )
+
+          # Create a cursor to execute SQL queries
+        cursor = conn.cursor()
+
+        # Execute a SQL query to get the total count of entries in the "userinfo" table
+        cursor.execute("SELECT COUNT(*) FROM userinfo;")
+
+        # Fetch the result
+        total_count = cursor.fetchone()[0]
+
+        return jsonify({"total_count": total_count}), 200
 
     except psycopg2.Error as e:
         return jsonify({"error": f"Database error: {e}"}), 500
