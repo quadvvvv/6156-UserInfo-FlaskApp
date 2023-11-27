@@ -43,9 +43,8 @@ def main():
 #         return False
 
 
-
 # API to create a new user
-@app.route('/userinfo/', methods=['POST'])
+@app.route('/userinfo', methods=['POST'])
 def create_user():
     data = request.json
     name = data.get('name')
@@ -81,7 +80,8 @@ def create_user():
         cursor = conn.cursor()
 
         # Generate a new UUID
-        user_uuid = str(uuid.uuid4())
+        new_uuid = str(uuid.uuid4())
+        uuid_without_hyphens = str(new_uuid).replace("-", "")
 
         #TODO boilerplate code
         ## Upload the picture to S3
@@ -97,7 +97,7 @@ def create_user():
             INSERT INTO userinfo (uuid, name, company, email, is_recruiter, picture_url)
             VALUES (%s, %s, %s, %s, %s, %s);
             """,
-            (user_uuid, name, company, email, is_recruiter, picture_url)
+            (uuid_without_hyphens, name, company, email, is_recruiter, picture_url)
         )
 
         # Commit the transaction
@@ -278,7 +278,7 @@ def get_total_count():
             conn.close()
 
 # API to update a user's company
-@app.route('/userinfo/<email>', methods=['POST'])
+@app.route('/userinfo/<email>', methods=['PUT'])
 def update_user_company(email):
     data = request.json
     new_company = data.get('new_company')
