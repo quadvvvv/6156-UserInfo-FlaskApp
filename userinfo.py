@@ -42,122 +42,44 @@ def main():
 #         print("Credentials not available")
 #         return False
 
-
-# API to create a new user
-@app.route('/userinfo', methods=['POST'])
-def create_user():
-    data = request.json
-    name = data.get('name')
-    company = data.get('company')
-    email = data.get('email')
-    is_recruiter = data.get('is_recruiter')
-    picture_url = data.get('picture_url')
-
-    #TODO: upload picture to s3 bucket and return a url
-    # # Check if the 'picture' file is included in the request
-    # if 'picture' not in request.files:
-    #     return jsonify({"error": "No picture file provided"}), 400
-
-    # picture_file = request.files['picture']
-
-    # if not name or not company or not email or is_recruiter is None or not picture_file:
-    #     return jsonify({"error": "Missing required fields"}), 400
-
-    if not name or not company or not email or is_recruiter is None or not picture_url:
-        return jsonify({"error": "Missing required fields"}), 400
-
-    try:
-        # Connect to the database
-        conn = psycopg2.connect(
-            host=db_host,
-            port=db_port,
-            database=db_name,
-            user=db_user,
-            password=db_password
-        )
-
-        # Create a cursor to execute SQL queries
-        cursor = conn.cursor()
-
-        # Generate a new UUID
-        new_uuid = str(uuid.uuid4())
-        uuid_without_hyphens = str(new_uuid).replace("-", "")
-
-        #TODO boilerplate code
-        ## Upload the picture to S3
-        # picture_filename = f"{user_uuid}_{picture_file.filename}"
-        # if upload_to_s3(picture_file, s3_bucket_name, picture_filename):
-        #     picture_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{picture_filename}"
-        # else:
-        #     return jsonify({"error": "Failed to upload picture to S3"}), 500
-
-        # Insert new user into the "userinfo" table
-        cursor.execute(
-            """
-            INSERT INTO userinfo (uuid, name, company, email, is_recruiter, picture_url)
-            VALUES (%s, %s, %s, %s, %s, %s);
-            """,
-            (uuid_without_hyphens, name, company, email, is_recruiter, picture_url)
-        )
-
-        # Commit the transaction
-        conn.commit()
-
-        return jsonify({"message": "User created successfully"}), 201
-
-    except psycopg2.Error as e:
-        return jsonify({"error": f"Database error: {e}"}), 500
-
-    finally:
-        # Close the cursor and connection
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-# API to get information about a specific user based on the email
-
-# passed test
 @app.route('/userinfo/<email>', methods=['GET'])
 def get_user(email):
     try:
-        # Connect to the database
-        conn = psycopg2.connect(
+        # Connect to the database using a context manager
+        with psycopg2.connect(
             host=db_host,
             port=db_port,
             database=db_name,
             user=db_user,
             password=db_password
-        )
+        ) as conn:
 
-        # Create a cursor to execute SQL queries
-        cursor = conn.cursor()
+            with conn.cursor() as cursor:
 
-        # Retrieve user information from the "userinfo" table
-        cursor.execute("SELECT * FROM userinfo WHERE email = %s;", (email,))
-        user = cursor.fetchone()
+                # Retrieve user information from the "userinfo" table (case-insensitive email comparison)
+                cursor.execute("SELECT * FROM userinfo WHERE LOWER(email) = LOWER(%s);", (email,))
+                user = cursor.fetchone()
 
-        if user:
-            user_info = {
-                "uuid": user[0],
-                "name": user[1],
-                "company": user[2],
-                "email": user[3],
-                "is_recruiter": user[4],
-                "picture_url": user[5]
-            }
-            return jsonify(user_info)
-        else:
-            return jsonify({"error": "User not found"}), 404
+                if user:
+                    user_info = {
+                        "uuid": user[0],
+                        "name": user[1],
+                        "company": user[2],
+                        "email": user[3],
+                        "is_recruiter": user[4],
+                        "picture_url": user[5]
+                    }
+                    return jsonify(user_info)
+                else:
+                    return jsonify({"error": "User not found"}), 404
 
     except psycopg2.Error as e:
         return jsonify({"error": f"Database error: {e}"}), 500
 
-    finally:
-        # Close the cursor and connection
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+
+# API to get information about a specific user based on the email
+
+# passed test
 
 # API to get all recruiters
 # test passed
@@ -277,6 +199,63 @@ def get_total_count():
         if conn:
             conn.close()
 
+
+# API to create a new user
+@app.route('/userinfo', methods=['POST'])
+def create_user():
+    data = request.json
+    name = data.get('name')
+    company = data.get('company')
+    email = data.get('email')
+    is_recruiter = data.get('is_recruiter')
+    picture_url = data.get('picture_url')
+
+    # Check if all required fields are provided
+    if not name or not company or not email or is_recruiter is None or not picture_url:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        # Connect to the database using a context manager
+        with psycopg2.connect(
+            host=db_host,
+            port=db_port,
+            database=db_name,
+            user=db_user,
+            password=db_password
+        ) as conn:
+
+            # Create a cursor to execute SQL queries
+            with conn.cursor() as cursor:
+
+                # Generate a new UUID
+                new_uuid = str(uuid.uuid4())
+                uuid_without_hyphens = new_uuid.replace("-", "")
+
+                # TODO: Add code for uploading the picture to S3 if needed
+                # picture_filename = f"{uuid_without_hyphens}_{picture_file.filename}"
+                # if upload_to_s3(picture_file, s3_bucket_name, picture_filename):
+                #     picture_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{picture_filename}"
+                # else:
+                #     return jsonify({"error": "Failed to upload picture to S3"}), 500
+
+                # Insert new user into the "userinfo" table
+
+                cursor.execute(
+                    """
+                    INSERT INTO userinfo (uuid, is_recruiter, name, company, email, picture_url)
+                    VALUES (%s, %s, %s, %s, %s, %s);
+                    """,
+                    (uuid_without_hyphens, is_recruiter, name, company, email, picture_url)
+                )
+
+                # Commit the transaction
+                conn.commit()
+
+        return jsonify({"message": "User created successfully"}), 201
+
+    except psycopg2.Error as e:
+        return jsonify({"error": f"Database error: {e}"}), 500
+
 # API to update a user's company
 @app.route('/userinfo/<email>', methods=['PUT'])
 def update_user_company(email):
@@ -287,69 +266,56 @@ def update_user_company(email):
         return jsonify({"error": "Missing 'new_company' field in the request body"}), 400
 
     try:
-        # Connect to the database
-        conn = psycopg2.connect(
+        # Connect to the database using a context manager
+        with psycopg2.connect(
             host=db_host,
             port=db_port,
             database=db_name,
             user=db_user,
             password=db_password
-        )
+        ) as conn:
 
-        # Create a cursor to execute SQL queries
-        cursor = conn.cursor()
+            # Create a cursor to execute SQL queries
+            with conn.cursor() as cursor:
 
-        # Update the user's company in the "userinfo" table
-        cursor.execute("UPDATE userinfo SET company = %s WHERE email = %s;", (new_company, email))
+                # Update the user's company in the "userinfo" table
+                cursor.execute("UPDATE userinfo SET company = %s WHERE email = %s;", (new_company, email))
 
-        # Commit the transaction
-        conn.commit()
+                # Commit the transaction
+                conn.commit()
 
         return jsonify({"message": f"User's company updated to {new_company} successfully"}), 200
 
     except psycopg2.Error as e:
         return jsonify({"error": f"Database error: {e}"}), 500
 
-    finally:
-        # Close the cursor and connection
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
 
 # API to delete a specific user
 @app.route('/userinfo/<email>', methods=['DELETE'])
 def delete_user(email):
     try:
-        # Connect to the database
-        conn = psycopg2.connect(
+        # Connect to the database using a context manager
+        with psycopg2.connect(
             host=db_host,
             port=db_port,
             database=db_name,
             user=db_user,
             password=db_password
-        )
+        ) as conn:
 
-        # Create a cursor to execute SQL queries
-        cursor = conn.cursor()
+            # Create a cursor to execute SQL queries
+            with conn.cursor() as cursor:
 
-        # Delete the user from the "userinfo" table
-        cursor.execute("DELETE FROM userinfo WHERE email = %s;", (email,))
+                # Delete the user from the "userinfo" table
+                cursor.execute("DELETE FROM userinfo WHERE email = %s;", (email,))
 
-        # Commit the transaction
-        conn.commit()
+                # Commit the transaction
+                conn.commit()
 
         return jsonify({"message": "User deleted successfully"}), 200
 
     except psycopg2.Error as e:
         return jsonify({"error": f"Database error: {e}"}), 500
-
-    finally:
-        # Close the cursor and connection
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)
