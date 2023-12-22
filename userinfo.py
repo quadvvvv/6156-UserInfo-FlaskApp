@@ -16,6 +16,7 @@ app = Flask(__name__)
 # Get the path to the directory containing this script
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
+
 # Database configuration (replace these values with your RDS details)
 db_host =  "desperado-db.ctldmj6kaxoc.us-east-2.rds.amazonaws.com"
 db_port = 5432
@@ -30,6 +31,7 @@ conn = None
 # for testing
 @app.route('/userinfo', methods=['GET'])
 def main():
+    print(f"Script directory: {script_directory}")
     return "Hello World",200
 
 
