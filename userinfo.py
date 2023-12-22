@@ -1,7 +1,9 @@
 import uuid
 import psycopg2
 import os
+from datetime import datetime
 import boto3 # for picture upload
+
 
 from botocore.exceptions import NoCredentialsError
 from flask import Flask, request, jsonify
@@ -323,14 +325,17 @@ def delete_user(email):
         return jsonify({"error": f"Database error: {e}"}), 500
 
 # middleware are usin the Flask built-in hooks instead of async 
-
 # middleware - logging request
 @app.before_request
 def log_request_info():
     log_file_path = os.path.join(script_directory, 'request_log.txt')
     with open(log_file_path, 'a') as f:
+        current_datetime = datetime.now()
+        formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+        f.write(f'TimeStamp:{datetime.now()}\n')
         f.write(f'Method: {request.method}\n')
         f.write(f'Path: {request.path}\n')
+        f.write('\n')
 
 # middleware - logging response
 @app.after_request
