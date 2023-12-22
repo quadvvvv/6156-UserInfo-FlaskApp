@@ -31,8 +31,7 @@ conn = None
 # for testing
 @app.route('/userinfo', methods=['GET'])
 def main():
-    print(f"Script directory: {script_directory}")
-    return "Hello World",200
+    return f"Script directory: {script_directory}",200
 
 
 # # Helper function for create a new user to upload a file to s3
