@@ -7,6 +7,12 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
+
+# Set permissions for the log file
+RUN chmod -R 777 /app/request_log.txt
+
+RUN chmod -R 777 /app/response_log.txt
+
 # Install any needed packages specified in requirements.txt
 RUN pip install -r requirements.txt
 
