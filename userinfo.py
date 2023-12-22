@@ -317,5 +317,23 @@ def delete_user(email):
     except psycopg2.Error as e:
         return jsonify({"error": f"Database error: {e}"}), 500
 
+
+
+# middleware are using the Flask built-in hooks instead of async 
+# middleware - logging request
+@app.before_request
+def log_request_info():
+    with open('request_log.txt', 'a') as f:
+        f.write(f'Method: {request.method}\n')
+        f.write(f'Path: {request.path}\n')
+
+# middleware - logging response
+@app.after_request
+def log_response_info(response):
+    with open('response_log.txt', 'a') as f:
+        f.write(f'Status Code: {response.status_code}\n')
+        f.write(f'Data: {response.get_data()}\n')
+    return response
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)
